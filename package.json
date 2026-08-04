@@ -1,0 +1,50 @@
+{
+  "name": "exam-system",
+  "version": "1.0.0",
+  "description": "سیستم جامع آزمون آفلاین",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.2",
+    "bcryptjs": "^2.4.3",
+    "crypto-js": "^4.2.0",
+    "xlsx": "^0.18.5",
+    "pdfkit": "^0.14.0",
+    "jszip": "^3.10.1",
+    "bootstrap": "^5.3.2",
+    "@popperjs/core": "^2.11.8"
+  },
+  "build": {
+    "appId": "com.exam.system",
+    "productName": "ExamSystem",
+    "directories": {
+      "output": "build"
+    },
+    "win": {
+      "target": "portable",
+      "icon": "assets/icon.ico"
+    },
+    "portable": {
+      "artifactName": "ExamSystem.exe"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "database/**/*",
+      "renderer/**/*",
+      "services/**/*",
+      "utils/**/*",
+      "assets/**/*",
+      "node_modules/**/*"
+    ]
+  }
+}

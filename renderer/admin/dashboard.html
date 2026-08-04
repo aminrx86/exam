@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>داشبورد مدیریت</title>
+    <link rel="stylesheet" href="../css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- سایدبار -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar vh-100 position-fixed">
+                <div class="p-3 text-center border-bottom border-secondary">
+                    <img src="../assets/logo.png" alt="Logo" height="50" class="mb-2">
+                    <h5 class="text-white">مدیریت آزمون</h5>
+                </div>
+                <ul class="nav flex-column mt-3">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="dashboard.html">
+                            <i class="bi bi-speedometer2"></i> داشبورد
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="questions.html">
+                            <i class="bi bi-question-circle"></i> بانک سوالات
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="exams.html">
+                            <i class="bi bi-file-text"></i> آزمون‌ها
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="participants.html">
+                            <i class="bi bi-people"></i> شرکت‌کنندگان
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="reports.html">
+                            <i class="bi bi-bar-chart-line"></i> گزارشات
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link text-danger" id="logoutBtn" href="#">
+                            <i class="bi bi-box-arrow-left"></i> خروج
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- محتوای اصلی -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4" style="margin-right: 16.6%;">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">داشبورد</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button class="btn btn-sm btn-outline-secondary me-2" id="backupBtn">
+                            <i class="bi bi-cloud-arrow-up"></i> پشتیبان‌گیری
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary me-2" id="restoreBtn">
+                            <i class="bi bi-cloud-arrow-down"></i> بازیابی بکاپ
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="refreshBtn">
+                            <i class="bi bi-arrow-clockwise"></i> بروزرسانی
+                        </button>
+                    </div>
+                </div>
+
+                <!-- کارت‌های آماری -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="dashboard-card bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="small">تعداد سوالات</div>
+                                    <div class="number" id="totalQuestions">0</div>
+                                </div>
+                                <i class="bi bi-question-circle icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="dashboard-card bg-success text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="small">تعداد آزمون‌ها</div>
+                                    <div class="number" id="totalExams">0</div>
+                                </div>
+                                <i class="bi bi-file-text icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="dashboard-card bg-warning text-dark">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="small">شرکت‌کنندگان</div>
+                                    <div class="number" id="totalParticipants">0</div>
+                                </div>
+                                <i class="bi bi-people icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="dashboard-card bg-info text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="small">میانگین نمرات</div>
+                                    <div class="number" id="avgScore">0</div>
+                                </div>
+                                <i class="bi bi-graph-up-arrow icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- آخرین فعالیت‌ها -->
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <i class="bi bi-clock-history"></i> آخرین فعالیت‌ها
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover" id="recentLogsTable">
+                            <thead>
+                                <tr>
+                                    <th>زمان</th>
+                                    <th>عملیات</th>
+                                    <th>جزئیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="3" class="text-center">در حال بارگذاری...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const { db, checkSession, logoutAdmin, showSaveDialog, showOpenDialog, backup, restore, getAdminLogs } = window.electronAPI;
+
+        // بررسی session
+        checkSession().then(result => {
+            if (!result.loggedIn) {
+                window.location.href = '../index.html';
+            }
+        });
+
+        // بارگذاری آمار
+        async function loadDashboard() {
+            try {
+                // دریافت تعداد سوالات
+                const questions = await db.getAllQuestions();
+                document.getElementById('totalQuestions').textContent = questions.length;
+
+                // دریافت تعداد آزمون‌ها
+                const exams = await db.getAllExams();
+                document.getElementById('totalExams').textContent = exams.length;
+
+                // دریافت تعداد شرکت‌کنندگان
+                const participants = await db.getAllParticipants();
+                document.getElementById('totalParticipants').textContent = participants.length;
+
+                // محاسبه میانگین نمرات (با فرض اینکه هر شرکت‌کننده نمره دارد)
+                let sum = 0, count = 0;
+                participants.forEach(p => {
+                    if (p.score !== null && p.score !== undefined) {
+                        sum += p.score;
+                        count++;
+                    }
+                });
+                const avg = count > 0 ? (sum / count).toFixed(2) : 0;
+                document.getElementById('avgScore').textContent = avg;
+
+                // بارگذاری لاگ‌های اخیر
+                const logs = await getAdminLogs(10);
+                const tbody = document.querySelector('#recentLogsTable tbody');
+                if (!logs || logs.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="text-center">لاگی یافت نشد</td></tr>`;
+                } else {
+                    tbody.innerHTML = logs.map(log => `
+                        <tr>
+                            <td>${new Date(log.log_date).toLocaleString('fa-IR')}</td>
+                            <td>${log.action}</td>
+                            <td>${log.details}</td>
+                        </tr>
+                    `).join('');
+                }
+
+            } catch (err) {
+                console.error('خطا در بارگذاری داشبورد:', err);
+            }
+        }
+
+        loadDashboard();
+
+        // پشتیبان‌گیری
+        document.getElementById('backupBtn').addEventListener('click', async () => {
+            const { filePath } = await showSaveDialog({
+                title: 'ذخیره فایل پشتیبان',
+                defaultPath: 'exam-backup.zip',
+                filters: [{ name: 'فایل‌های Zip', extensions: ['zip'] }]
+            });
+            if (!filePath) return;
+            const result = await backup(filePath);
+            if (result.success) {
+                alert('بکاپ با موفقیت ذخیره شد: ' + result.path);
+            } else {
+                alert('خطا در گرفتن بکاپ: ' + result.message);
+            }
+        });
+
+        document.getElementById('restoreBtn').addEventListener('click', async () => {
+            const response = await showOpenDialog({
+                title: 'انتخاب فایل پشتیبان',
+                properties: ['openFile'],
+                filters: [{ name: 'فایل‌های Zip', extensions: ['zip'] }]
+            });
+            if (response.canceled || !response.filePaths.length) return;
+            const result = await restore(response.filePaths[0]);
+            if (result.success) {
+                alert('بازیابی با موفقیت انجام شد. لطفاً برنامه را مجدداً راه‌اندازی کنید.');
+            } else {
+                alert('خطا در بازیابی بکاپ: ' + result.message);
+            }
+        });
+
+        // بروزرسانی با دکمه
+        document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
+
+        // خروج
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutAdmin();
+            window.location.href = '../index.html';
+        });
+    </script>
+</body>
+</html>

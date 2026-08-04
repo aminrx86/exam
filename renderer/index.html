@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم آزمون - ورود مدیر</title>
+    <!-- Bootstrap 5 RTL -->
+    <link rel="stylesheet" href="css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+    <div class="container d-flex align-items-center justify-content-center min-vh-100">
+        <div class="card shadow-lg p-4" style="max-width: 400px; width: 100%;">
+            <div class="text-center mb-4">
+                <img src="assets/logo.png" alt="Logo" height="80" class="mb-2">
+                <h3 class="fw-bold">سیستم مدیریت آزمون</h3>
+                <p class="text-muted">ورود به پنل مدیریت</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="password" class="form-label">رمز عبور مدیر</label>
+                    <input type="password" class="form-control" id="password" placeholder="رمز عبور را وارد کنید" required autofocus>
+                </div>
+                <div id="errorMessage" class="alert alert-danger d-none"></div>
+                <button type="submit" class="btn btn-primary w-100 py-2" id="loginBtn">
+                    ورود
+                </button>
+                <div id="attemptsInfo" class="text-center text-muted mt-2 small"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // دریافت API از preload
+        const { loginAdmin, checkSession } = window.electronAPI;
+
+        const form = document.getElementById('loginForm');
+        const passwordInput = document.getElementById('password');
+        const errorDiv = document.getElementById('errorMessage');
+        const attemptsInfo = document.getElementById('attemptsInfo');
+        const loginBtn = document.getElementById('loginBtn');
+
+        let attempts = 0;
+        const MAX_ATTEMPTS = 5;
+        let lockUntil = null;
+
+        // بررسی session در شروع
+        checkSession().then(result => {
+            if (result.loggedIn) {
+                // اگر قبلاً وارد شده، به داشبورد برو
+                window.location.href = 'admin/dashboard.html';
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // بررسی قفل
+            if (lockUntil && Date.now() < lockUntil) {
+                const remaining = Math.ceil((lockUntil - Date.now()) / 1000);
+                errorDiv.textContent = `صبر کنید ${remaining} ثانیه`;
+                errorDiv.classList.remove('d-none');
+                return;
+            }
+
+            const password = passwordInput.value.trim();
+            if (!password) {
+                errorDiv.textContent = 'رمز عبور را وارد کنید';
+                errorDiv.classList.remove('d-none');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'در حال بررسی...';
+
+            try {
+                const result = await loginAdmin(password);
+                if (result.success) {
+                    // ورود موفق
+                    window.location.href = 'admin/dashboard.html';
+                } else {
+                    attempts++;
+                    const remaining = MAX_ATTEMPTS - attempts;
+                    if (remaining <= 0) {
+                        // قفل ۵ دقیقه‌ای
+                        lockUntil = Date.now() + 5 * 60 * 1000;
+                        attempts = 0;
+                        errorDiv.textContent = 'تعداد تلاش‌ها بیش از حد مجاز. به مدت ۵ دقیقه قفل شدید.';
+                        errorDiv.classList.remove('d-none');
+                        attemptsInfo.textContent = '';
+                    } else {
+                        errorDiv.textContent = result.message || 'رمز عبور اشتباه است';
+                        errorDiv.classList.remove('d-none');
+                        attemptsInfo.textContent = `تعداد تلاش باقی‌مانده: ${remaining}`;
+                    }
+                }
+            } catch (err) {
+                errorDiv.textContent = 'خطا در ارتباط با سرور';
+                errorDiv.classList.remove('d-none');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'ورود';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        });
+
+        // نمایش اطلاعات قفل هنگام بارگذاری مجدد
+        if (lockUntil && Date.now() < lockUntil) {
+            const remaining = Math.ceil((lockUntil - Date.now()) / 1000);
+            errorDiv.textContent = `صبر کنید ${remaining} ثانیه`;
+            errorDiv.classList.remove('d-none');
+        }
+    </script>
+</body>
+</html>

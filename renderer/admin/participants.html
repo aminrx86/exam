@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شرکت‌کنندگان</title>
+    <link rel="stylesheet" href="../css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar vh-100 position-fixed">
+                <div class="p-3 text-center border-bottom border-secondary">
+                    <img src="../assets/logo.png" alt="Logo" height="50" class="mb-2">
+                    <h5 class="text-white">مدیریت آزمون</h5>
+                </div>
+                <ul class="nav flex-column mt-3">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2"></i> داشبورد</a></li>
+                    <li class="nav-item"><a class="nav-link" href="questions.html"><i class="bi bi-question-circle"></i> بانک سوالات</a></li>
+                    <li class="nav-item"><a class="nav-link" href="exams.html"><i class="bi bi-file-text"></i> آزمون‌ها</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="participants.html"><i class="bi bi-people"></i> شرکت‌کنندگان</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reports.html"><i class="bi bi-bar-chart-line"></i> گزارشات</a></li>
+                    <li class="nav-item mt-4"><a class="nav-link text-danger" id="logoutBtn" href="#"><i class="bi bi-box-arrow-left"></i> خروج</a></li>
+                </ul>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4" style="margin-right: 16.6%;">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">شرکت‌کنندگان</h1>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-secondary" id="refreshBtn"><i class="bi bi-arrow-clockwise"></i> بروزرسانی</button>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <input type="text" id="searchInput" class="form-control" placeholder="جستجو بر اساس نام یا کد کاربری">
+                    </div>
+                    <div class="col-md-3">
+                        <select id="examFilter" class="form-select">
+                            <option value="">همه آزمون‌ها</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="statusFilter" class="form-select">
+                            <option value="">همه وضعیت‌ها</option>
+                            <option value="در حال آزمون">در حال آزمون</option>
+                            <option value="پایان یافته">پایان یافته</option>
+                            <option value="لغو شده">لغو شده</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100" id="filterBtn">اعمال فیلتر</button>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>نام</th>
+                                        <th>کد کاربری</th>
+                                        <th>آزمون</th>
+                                        <th>وضعیت</th>
+                                        <th>نمره</th>
+                                        <th>درصد</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="participantsTableBody">
+                                    <tr><td colspan="7" class="text-center py-4">در حال بارگذاری...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm" id="participantDetailsCard" style="display:none;">
+                    <div class="card-header">
+                        جزئیات شرکت‌کننده
+                    </div>
+                    <div class="card-body">
+                        <div id="participantDetailsContent"></div>
+                        <button class="btn btn-primary mt-3" id="printCertificateBtn">چاپ کارنامه PDF</button>
+                        <button class="btn btn-secondary mt-3 ms-2" id="closeDetailsBtn">بستن</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const { db, checkSession, logoutAdmin, generatePDF, showSaveDialog } = window.electronAPI;
+
+        const participantsTableBody = document.getElementById('participantsTableBody');
+        const searchInput = document.getElementById('searchInput');
+        const examFilter = document.getElementById('examFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const filterBtn = document.getElementById('filterBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const detailsCard = document.getElementById('participantDetailsCard');
+        const detailsContent = document.getElementById('participantDetailsContent');
+        const printCertificateBtn = document.getElementById('printCertificateBtn');
+        const closeDetailsBtn = document.getElementById('closeDetailsBtn');
+
+        let participants = [];
+        let exams = [];
+        let currentParticipantDetails = null;
+
+        checkSession().then(result => {
+            if (!result.loggedIn) window.location.href = '../index.html';
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await logoutAdmin();
+            window.location.href = '../index.html';
+        });
+
+        async function loadExams() {
+            const data = await db.getAllExams();
+            exams = data;
+            examFilter.innerHTML = '<option value="">همه آزمون‌ها</option>';
+            exams.forEach(exam => {
+                const option = document.createElement('option');
+                option.value = exam.id;
+                option.textContent = exam.title;
+                examFilter.appendChild(option);
+            });
+        }
+
+        async function loadParticipants() {
+            try {
+                const data = await db.getAllParticipants();
+                participants = data;
+                renderParticipants(participants);
+            } catch (err) {
+                participantsTableBody.innerHTML = `<tr><td colspan=\"7\" class=\"text-center text-danger\">خطا در بارگذاری شرکت‌کنندگان</td></tr>`;
+            }
+        }
+
+        function renderParticipants(list) {
+            if (!list || list.length === 0) {
+                participantsTableBody.innerHTML = `<tr><td colspan=\"7\" class=\"text-center py-4\">شرکت‌کننده‌ای یافت نشد</td></tr>`;
+                return;
+            }
+            participantsTableBody.innerHTML = list.map((p, index) => `
+                <tr class="participant-row" data-id="${p.id}">
+                    <td>${index + 1}</td>
+                    <td>${p.full_name}</td>
+                    <td>${p.user_code}</td>
+                    <td>${p.exam_title || '-'}</td>
+                    <td>${p.status || '-'}</td>
+                    <td>${p.score !== null ? p.score : '-'}</td>
+                    <td>${p.percentage !== null ? p.percentage.toFixed(2) + '%' : '-'}</td>
+                </tr>
+            `).join('');
+            document.querySelectorAll('.participant-row').forEach(row => {
+                row.addEventListener('click', () => showParticipantDetails(row.dataset.id));
+            });
+        }
+
+        async function showParticipantDetails(participantId) {
+            try {
+                const result = await db.getParticipantDetails(parseInt(participantId));
+                if (!result) {
+                    alert('جزئیاتی پیدا نشد');
+                    return;
+                }
+                currentParticipantDetails = result;
+                detailsCard.style.display = 'block';
+                let html = `
+                    <p><strong>نام:</strong> ${result.participant.full_name}</p>
+                    <p><strong>کد کاربری:</strong> ${result.participant.user_code}</p>
+                    <p><strong>آزمون:</strong> ${result.participant.exam_title || '-'}</p>
+                    <p><strong>وضعیت:</strong> ${result.participant.status}</p>
+                    <p><strong>نمره:</strong> ${result.participant.score !== null ? result.participant.score : '-'}</p>
+                    <p><strong>درصد:</strong> ${result.participant.percentage !== null ? result.participant.percentage.toFixed(2) + '%' : '-'}</p>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>سوال</th>
+                                    <th>پاسخ داده شده</th>
+                                    <th>پاسخ صحیح</th>
+                                    <th>صحیح؟</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                result.answers.forEach((answer, index) => {
+                    html += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${answer.question_text}</td>
+                            <td>${answer.selected_answer || '-'}</td>
+                            <td>${answer.correct_answer || '-'}</td>
+                            <td>${answer.is_correct === 1 ? '✔️' : '❌'}</td>
+                        </tr>
+                    `;
+                });
+                html += '</tbody></table></div>';
+                detailsContent.innerHTML = html;
+            } catch (err) {
+                alert('خطا در نمایش جزئیات');
+            }
+        }
+
+        async function applyFilters() {
+            const keyword = searchInput.value.trim();
+            const examId = examFilter.value;
+            const status = statusFilter.value;
+            let results = participants;
+            if (keyword) {
+                results = await db.searchParticipants(keyword);
+            }
+            if (examId) {
+                results = results.filter(p => p.exam_id === parseInt(examId));
+            }
+            if (status) {
+                results = results.filter(p => p.status === status);
+            }
+            renderParticipants(results);
+        }
+
+        filterBtn.addEventListener('click', applyFilters);
+        refreshBtn.addEventListener('click', async () => {
+            await loadParticipants();
+            await loadExams();
+        });
+        closeDetailsBtn.addEventListener('click', () => {
+            detailsCard.style.display = 'none';
+        });
+
+        printCertificateBtn.addEventListener('click', async () => {
+            if (!currentParticipantDetails) {
+                alert('شرکت‌کننده‌ای انتخاب نشده');
+                return;
+            }
+            const { filePath } = await showSaveDialog({
+                title: 'ذخیره کارنامه PDF',
+                defaultPath: 'certificate.pdf',
+                filters: [{ name: 'PDF', extensions: ['pdf'] }]
+            });
+            if (!filePath) {
+                return;
+            }
+            const response = await generatePDF({
+                ...currentParticipantDetails.participant,
+                answers: currentParticipantDetails.answers,
+                exam_title: currentParticipantDetails.participant.exam_title
+            }, 'certificate', filePath);
+            if (response.success) {
+                alert('کارنامه با موفقیت ایجاد شد');
+            } else {
+                alert('خطا در ایجاد کارنامه: ' + response.message);
+            }
+        });
+
+        (async () => {
+            await loadExams();
+            await loadParticipants();
+        })();
+    </script>
+</body>
+</html>

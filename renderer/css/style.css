@@ -1,0 +1,128 @@
+/* تنظیمات پایه RTL */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap');
+
+* {
+    font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+}
+
+body {
+    background-color: #f5f7fa;
+    direction: rtl;
+    text-align: right;
+}
+
+/* کارت‌های داشبورد */
+.dashboard-card {
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+.dashboard-card .icon {
+    font-size: 2.5rem;
+}
+.dashboard-card .number {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* سایدبار */
+.sidebar {
+    min-height: 100vh;
+    background: #2c3e50;
+    color: #fff;
+    padding-top: 20px;
+}
+.sidebar .nav-link {
+    color: #cbd5e1;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin: 4px 8px;
+}
+.sidebar .nav-link:hover {
+    background: #34495e;
+    color: #fff;
+}
+.sidebar .nav-link.active {
+    background: #3498db;
+    color: #fff;
+}
+.sidebar .nav-link i {
+    margin-left: 10px;
+}
+
+/* جدول‌ها */
+.table thead {
+    background: #f1f5f9;
+}
+.table-hover tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* فرم‌ها */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52,152,219,0.2);
+}
+
+/* دکمه‌ها */
+.btn {
+    border-radius: 8px;
+    padding: 8px 20px;
+}
+
+/* کارت‌های آماری */
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* محیط آزمون */
+.exam-container {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.question-text {
+    font-size: 1.2rem;
+    line-height: 1.8;
+}
+.options-list .form-check {
+    padding: 12px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: background 0.2s;
+}
+.options-list .form-check:hover {
+    background: #f8fafc;
+}
+.timer {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e74c3c;
+}
+
+/* تنظیمات پاسخگو */
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+        padding-bottom: 10px;
+    }
+    .dashboard-card .number {
+        font-size: 1.5rem;
+    }
+}
